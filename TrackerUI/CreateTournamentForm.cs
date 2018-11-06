@@ -148,7 +148,15 @@ namespace TrackerUI
             TournamentModel tm = new TournamentModel();
 
             tm.TournamentName = tournamentNameValue.Text;
-            tm.EntryFee = 0;
+
+            if (decimal.TryParse(entryFeeValue.Text, out decimal convFee))
+            {
+                tm.EntryFee = convFee;
+            }
+            else
+            {
+                tm.EntryFee = 0;
+            }
 
             tm.Prizes = selectedPrizes;
             tm.EnteredTeams = selectedTeams;

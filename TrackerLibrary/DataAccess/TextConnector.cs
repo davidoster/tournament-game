@@ -10,7 +10,19 @@ namespace TrackerLibrary.DataAccess
 {
     public class TextConnector : IDataConnection
     {
-        
+        public void CompleteTournament(TournamentModel model)
+        {
+            List<TournamentModel> tournaments = GlobalConfig.TournamentFile
+                .FullFilePath()
+                .LoadFile()
+                .ConvertToTournamentModels();
+
+            tournaments.Remove(model);
+
+            tournaments.SaveToTournamentFile();
+
+            TournamentLogic.UpdateTournamentResults(model);
+        }
 
         public void CreatePerson(PersonModel model)
         {
@@ -31,7 +43,6 @@ namespace TrackerLibrary.DataAccess
             
         }
 
-        // TODO - Wire up the CreatePrize for text files.
         public void CreatePrize(PrizeModel model)
         {
             // Load the text file and convert the text to List<PrizeModel>

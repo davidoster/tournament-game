@@ -24,11 +24,18 @@ namespace TrackerUI
 
             tournament = tournamentModel;
 
+            tournament.OnTournamentComplete += Tournament_OnTournamentComplete;
+
             WireUpLists();
 
             LoadFormData();
 
             LoadRounds();
+        }
+
+        private void Tournament_OnTournamentComplete(object sender, DateTime e)
+        {
+            this.Close();
         }
 
         private void LoadFormData()
@@ -240,8 +247,7 @@ namespace TrackerUI
                         }
                     }
                 }
-
-                if (i == 1)
+                else if (i == 1)
                 {
                     if (m.Entries[1].TeamCompeting != null)
                     {

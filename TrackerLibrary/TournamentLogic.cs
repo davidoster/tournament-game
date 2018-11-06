@@ -119,6 +119,95 @@ namespace TrackerLibrary
                 {
                     output += 1;
                 }
+                else
+                {
+                    return output;
+                }
+            }
+
+            // Tournament is complete
+            CompleteTournament(model);
+
+            return output - 1;
+        }
+
+        private static void CompleteTournament(TournamentModel model)
+        {
+            GlobalConfig.Connection.CompleteTournament(model);
+            TeamModel winners = model.Rounds.Last().First().Winner;
+            TeamModel runnerUp = model.Rounds.Last().First().Entries.Where(x => x.TeamCompeting != winners).First().TeamCompeting;
+
+            decimal winnerPrize = 0;
+            decimal runnerUpPrize = 0;
+
+            if (model.Prizes.Count > 0)
+            {
+                decimal totalIncome = model.EnteredTeams.Count * model.EntryFee;
+
+                List<PrizeModel> placePrizes = model.Prizes;
+
+                if (placePrizes.Count > 0)
+                {
+                    foreach (PrizeModel prize in placePrizes)
+                    {
+                        winnerPrize += prize.CalculatePrizePayout(totalIncome);
+                    }
+                }
+            }
+
+            // Send Email to all tournament
+            string subject = "";
+            StringBuilder body = new StringBuilder();
+
+            subject = $"In { model.TournamentName }, { winners.TeamName } has won!";
+
+            body.AppendLine("<h1>We have a WINNER!</h1>");
+            body.AppendLine("<p>Congratulations to our winner on a great tournament.</p>");
+            body.AppendLine("<br/>");
+
+            if (winnerPrize > 0)
+            {
+                body.AppendLine($"<p>{ winners.TeamName } will receive ${ winnerPrize }</p>");
+            }
+
+            if (runnerUpPrize > 0)
+            {
+                body.AppendLine($"<p>{ runnerUp.TeamName } will receive ${ runnerUpPrize }</p>");
+            }
+
+            body.AppendLine("<p>Thanks for a great tournament everyone!</p>");
+            body.AppendLine("~Tournament Game");
+
+            List<string> bcc = new List<string>();
+
+            foreach (TeamModel t in model.EnteredTeams)
+            {
+                foreach (PersonModel p in t.TeamMembers)
+                {
+                    if (p.EmailAddress.Length > 0)
+                    {
+                        bcc.Add(p.EmailAddress); 
+                    }
+                }
+            }
+
+            EmailLogic.SendEmail(new List<string>(), bcc, subject, body.ToString());
+
+            // Complete Tournament
+            model.CompleteTournament();
+        }
+
+        private static decimal CalculatePrizePayout(this PrizeModel prize, decimal totalIncome)
+        {
+            decimal output = 0;
+
+            if (prize.PrizeAmount > 0)
+            {
+                output = prize.PrizeAmount;
+            }
+            else
+            {
+                output = Decimal.Multiply(totalIncome, Convert.ToDecimal(prize.PrizePercentage / 100));
             }
 
             return output;
@@ -169,7 +258,7 @@ namespace TrackerLibrary
                     {
                         m.Winner = m.Entries[0].TeamCompeting;
                     }
-                    else if(m.Entries[1].Score < m.Entries[0].Score)
+                    else if (m.Entries[1].Score < m.Entries[0].Score)
                     {
                         m.Winner = m.Entries[1].TeamCompeting;
                     }
@@ -194,9 +283,9 @@ namespace TrackerLibrary
                     {
                         throw new Exception("We do not allow ties in this application.");
                     }
-                } 
+                }
             }
-            
+
         }
 
         private static void CreateOtherRounds(TournamentModel model, int rounds)
@@ -273,7 +362,7 @@ namespace TrackerLibrary
             int output = 1;
             int val = 2;
 
-            while (val  < teamCount)
+            while (val < teamCount)
             {
                 output += 1;
 
